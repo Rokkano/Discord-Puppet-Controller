@@ -6,6 +6,8 @@ This project is divided in two versions : the HTML version that runs on a browse
 
 ## HTML VERSION
 
+This version is honestly not that impressive, every elements position in the pages are based on fixed distances in px, and the code is not really pretty.
+
 ```bash
 # Run the DPC-HTML version
 ./main.html
