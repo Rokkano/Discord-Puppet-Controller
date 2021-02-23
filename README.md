@@ -13,6 +13,7 @@ This version is honestly not that impressive, every elements position in the pag
 ./main.html
 ```
 
+![Screenshot](HTML/img/Screenshot.png)
 
 Tested and working on Firefox 85.0.2.
 
