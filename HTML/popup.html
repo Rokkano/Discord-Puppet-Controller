@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Puppet ControlLer</title>	
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+  </head>
+  <body onload="window.resizeTo(600,500)" background="img/background.png">
+ 
+  
+  <div style="float:left; margin:2px">
+
+
+   <div style="position:relative; left:10px; width:250px; top:10px; height:30px">
+		<div style="overflow:auto; height:250px; width:300px">
+		<ul class="list-group" id="puppets"></ul>
+		</div>
+			<input style="position:relative; top:10px; left:5px; width:275px" type="url" id="newPuppetUrl" name="newPuppetUrl" placeholder="Enter your puppet Webhook url" pattern="https://discord.com/api/webhooks/.*">
+			<input style="position:relative; top:15px; left:5px; width:275px" type="name" id="newPuppetName" name="newPuppetName" placeholder="Enter your puppet name">
+			<input style="position:relative; top:20px; left:5px; width:275px" type="avatar" id="newPuppetAvatar" name="newPuppetAvatar" placeholder="Enter your puppet avatar url">
+ 	
+		  <button class="button" style="position:relative; top:23px" onclick="saveToJson()">Export</button>
+		  <button class="button" style="position:relative; left:-63px; top:50px" onclick="loadFromJson()">Import</button>
+		  <!-- <button class="button" style="position:relative; left:-63px; top:50px">Import</button> -->
+		  
+		  <button class="button" style="position:relative; left:70px; top:-1px" onclick="createNewPuppet()">Create new puppet</button>
+		  <button class="button" style="position:relative; left:70px; top:2px" onclick="removePuppet()">Remove selected puppet</button>
+		  
+		  
+  </div>
+</div>
+
+  <div style="float:right; margin:5px">
+  <textarea style="resize:none; overflow:auto" rows="19" cols="32" id="msg" onkeypress="press(event)"></textarea>
+  </div>
+  </body>
+  <script>
+	function saveToJson() {
+		if (activePuppet != null)
+			activePuppet = null;
+		var children = document.getElementById("puppets").childNodes;
+		var arr = [];
+		for(child in children)
+		{
+			var obj = children[child];
+			if (typeof obj === "object")
+				arr.push({url: obj.getAttribute("url"), name: obj.getAttribute("name"), avatar: obj.getAttribute("avatar")});
+		}
+		
+		var a = document.createElement('a');
+		a.setAttribute('href','data:text/plain;charset=utf-8,'+ JSON.stringify(arr));
+		a.setAttribute('download',"savestate.json");
+		a.click();
+	}
+
+	function loadFromJson() {
+		if (activePuppet != null)
+			activePuppet = null;
+		var element = document.createElement('div');
+		element.innerHTML = '<input type="file">';
+		var fileInput = element.firstChild;
+		fileInput.addEventListener('change', function() {
+		var file = fileInput.files[0];
+		if (file.name.match(/\.json$/)) {
+			var reader = new FileReader();
+			reader.onload = function() {
+				var arr = JSON.parse(reader.result);
+				for( element of arr) {
+					document.getElementById("puppets").innerHTML += '<a href="#" class="list-group-item" onClick="setActivePuppet(this)" name="' + 
+					element.name + '" url="' +
+					element.url + '" avatar="' +
+					element.avatar + '">' +
+					element.name + '</a>';
+				}
+			};
+			reader.readAsText(file);    
+		} else {
+			alert("File not supported, .json files only");
+		}});
+		fileInput.click();
+	}
+	
+	
+	var activePuppet = null;
+	function setActivePuppet(item) {
+		if (item.className === "list-group-item active")
+		{
+			item.className = "list-group-item";
+			activePuppet = null;
+		}
+		else
+		{
+			item.className = "list-group-item active";
+			if (activePuppet != null)
+				activePuppet.className = "list-group-item";
+			activePuppet = item;
+		}
+	}
+	
+	function createNewPuppet() {
+		var url = document.getElementById("newPuppetUrl").value;
+		var name = document.getElementById("newPuppetName").value;
+		var avatar = document.getElementById("newPuppetAvatar").value;
+		if (!url|| url === "")
+			return;
+		if (activePuppet != null)
+		{
+			activePuppet.className = "list-group-item";
+			activePuppet = null;
+		}
+		document.getElementById("puppets").innerHTML += '<a href="#" class="list-group-item" onClick="setActivePuppet(this)" name="' + 
+		name + '" url="' +
+		url + '" avatar="' +
+		avatar + '">' +
+		name + '</a>';
+	}
+	
+	function removePuppet() {
+		if (activePuppet != null)
+		{
+			activePuppet.remove();
+			activePuppet = null;
+		}
+	}
+	
+	function press(event) {
+		if (event.keyCode == 13 && !event.shiftKey)
+		{
+			var msg_item = document.getElementById("msg");
+			if (msg_item.value && msg_item.value !== "")
+			{
+				if (activePuppet != null)
+					sendMessage();
+				msg_item.value = "";
+			}
+			event.preventDefault();
+		}
+	}
+	
+    function sendMessage() {
+      var request = new XMLHttpRequest();
+      request.open("POST", activePuppet.getAttribute("url"));
+      request.setRequestHeader('Content-type', 'application/json');
+	  var message = document.getElementById("msg").value;
+      var params = {
+        username: activePuppet.getAttribute("name"),
+        avatar_url: activePuppet.getAttribute("avatar"),
+        content: message
+      }
+      request.send(JSON.stringify(params));
+    }
+  </script>
+  
+  
+</html>
